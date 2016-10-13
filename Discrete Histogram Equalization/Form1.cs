@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.IO;
 
 namespace Discrete_Histogram_Equalization
 {
@@ -19,9 +20,21 @@ namespace Discrete_Histogram_Equalization
 
         private void button1_Click(object sender, EventArgs e)
         {
+            if(openFileDialog1.ShowDialog()== DialogResult.OK)
+            {
+                Histogram_Equalization.Handle(openFileDialog1.FileName,Source, Answer);
+            }
             
         }
 
+        private void Form1_Load(object sender, EventArgs e)
+        {
 
+        }
+
+        private void Answer_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
