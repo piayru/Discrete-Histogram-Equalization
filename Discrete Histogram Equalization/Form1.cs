@@ -20,9 +20,27 @@ namespace Discrete_Histogram_Equalization
 
         private void button1_Click(object sender, EventArgs e)
         {
+            int min, max;
+            try {
+                min = Convert.ToInt32(MinPixel.Text);
+                max = Convert.ToInt32(MaxPixel.Text);
+            }
+            catch( Exception ex ) {
+                MessageBox.Show("請輸入正確格式");
+                MinPixel.Text = "";
+                MaxPixel.Text = "";
+                return;
+            }
+            if( min < 0 || min > 256 || max < 0 || max >256)
+            {
+                MessageBox.Show("請輸入正確格式");
+                MinPixel.Text = "";
+                MaxPixel.Text = "";
+                return;
+            }
             if(openFileDialog1.ShowDialog()== DialogResult.OK)
             {
-                Histogram_Equalization.Handle(openFileDialog1.FileName,Source, Answer);
+                Histogram_Equalization.Handle(openFileDialog1.FileName,Source, Answer,min,max);
             }
             
         }

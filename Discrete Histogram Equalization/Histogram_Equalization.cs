@@ -14,7 +14,7 @@ namespace Discrete_Histogram_Equalization
     {
         static int[,,] Image_Pixel;
         static int Image_Height, Image_Width;
-        public static void Handle(string FilePath,PictureBox Source,PictureBox Answer)
+        public static void Handle(string FilePath,PictureBox Source,PictureBox Answer,int min,int max)
         {
             Bitmap Source_Image = new Bitmap(FilePath);
             Source.Image = Source_Image;
@@ -22,7 +22,7 @@ namespace Discrete_Histogram_Equalization
             Image_Height = Source_Image.Height;
             Image_Width = Source_Image.Width;
             int[,] Pixel_Count = new int[3, 256];
-            Recolor(Count_Correspond(Count_Pixel_Times()));
+            Recolor(Count_Correspond(Count_Pixel_Times(),min,max));
             Answer.Image = SetRGBData(Image_Pixel);
         }
 
@@ -135,7 +135,7 @@ namespace Discrete_Histogram_Equalization
         }
 
         //Count correspond Color pixel.
-        private static List<Dictionary<int,int>> Count_Correspond(int[,]Piexl_Times)
+        private static List<Dictionary<int,int>> Count_Correspond(int[,]Piexl_Times,int min,int max)
         {
             int[,] RGB_CDF = new int[3,256];
             for (int Index_Color = 0; Index_Color < 3; Index_Color++)
@@ -153,7 +153,7 @@ namespace Discrete_Histogram_Equalization
                 double Rnage = RGB_CDF[Index_Color,255] - Piexl_Times[Index_Color, 0];
                 for(int Index_Piexl = 0; Index_Piexl < 256; Index_Piexl++)
                 {
-                    int Nes_Piexl = Convert.ToInt32( Math.Round(Convert.ToDouble(RGB_CDF[Index_Color, Index_Piexl]- RGB_CDF[Index_Color, 0])*255/ Rnage, MidpointRounding.AwayFromZero));
+                    int Nes_Piexl = Convert.ToInt32( Math.Round(Convert.ToDouble(RGB_CDF[Index_Color, Index_Piexl]- RGB_CDF[Index_Color, 0])*(max-min)/ Rnage, MidpointRounding.AwayFromZero))+min;
                     OneColor_Equalized.Add(Index_Piexl, Nes_Piexl);
                 }
                 Temp_Equalized.Add(OneColor_Equalized);
