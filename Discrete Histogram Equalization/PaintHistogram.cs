@@ -1,32 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
+using System.Windows.Forms;
 
 namespace Discrete_Histogram_Equalization
 {
-    class Histogram_Equalization :Form1
+    class PaintHistogram
     {
-        static int[,,] Image_Pixel;
+        static int[,,] Image_Pixel,Source_Pixel;
         static int Image_Height, Image_Width;
-        public static void Handle(string FilePath,PictureBox Source,PictureBox Answer,int min,int max)
+        static int[] Max_RGB = new int[3];
+        static int Paint_Start_x = 25, Paint_Start_y = 275;
+        
+        public static void Paint_Source(string FilePath,PictureBox Source,int Index)
         {
+            Bitmap Base_Image = new Bitmap("..//..//..//Histogram.jpg");
             Bitmap Source_Image = new Bitmap(FilePath);
-            Source.Image = Source_Image;
-            Image_Pixel = GetRGBData(Source_Image);
+            Image_Pixel = GetRGBData(Base_Image);
+            Source_Pixel = GetRGBData(Source_Image);
             Image_Height = Source_Image.Height;
             Image_Width = Source_Image.Width;
-            int[,] Pixel_Count = new int[3, 256];
-            Recolor(Count_Correspond(Count_Pixel_Times(),min,max));
-            Answer.Image = SetRGBData(Image_Pixel);
+            Initial_Bar();
+            
+            Paint_Color_Number(Image_Pixel, Count_Pixel_Times(Source_Pixel), Index);
+            Source.Image = Base_Image = SetRGBData(Image_Pixel);
         }
 
-        //Get and Set image RGB
+        public static void Paint_Answer(string FilePath, PictureBox Source, PictureBox Answer, int Index)
+        {
+            Bitmap Base_Image = new Bitmap("..//..//..//Histogram.jpg");
+            Bitmap Source_Image = new Bitmap(Answer.Image);
+            Image_Pixel = GetRGBData(Base_Image);
+            Source_Pixel = GetRGBData(Source_Image);
+            Image_Height = Source_Image.Height;
+            Image_Width = Source_Image.Width;
+            Initial_Bar();
+
+            Paint_Color_Number(Image_Pixel, Count_Pixel_Times(Source_Pixel), Index);
+            Source.Image = Base_Image = SetRGBData(Image_Pixel);
+        }
+
         private static int[,,] GetRGBData(Bitmap bitImg)
         {
             int height = bitImg.Height;
@@ -120,9 +137,8 @@ namespace Discrete_Histogram_Equalization
 
             return bitImg;
         }
-
         //Count each RGB times.
-        private static int[,] Count_Pixel_Times()
+        private static int[,] Count_Pixel_Times(int[,,] Image_Pixel)
         {
             int[,] Temp_Count = new int[3, 256];
 
@@ -130,43 +146,48 @@ namespace Discrete_Histogram_Equalization
                 for (int Index_Width = 0; Index_Width < Image_Width; Index_Width++)
                     for (int Index_RGB = 0; Index_RGB < 3; Index_RGB++)
                         Temp_Count[Index_RGB, Image_Pixel[Index_Hieght, Index_Width, Index_RGB]]++;
+
+            for (int Index_Pixel = 0; Index_Pixel < 256; Index_Pixel++)
+                for (int Index_RGB = 0; Index_RGB < 3; Index_RGB++)
+                {
+                    if (Max_RGB[Index_RGB] < Temp_Count[Index_RGB, Index_Pixel])
+                        Max_RGB[Index_RGB] = Temp_Count[Index_RGB, Index_Pixel];
+                }
             return Temp_Count;
         }
-
-        //Count correspond Color pixel.
-        private static List<Dictionary<int,int>> Count_Correspond(int[,]Piexl_Times,int min,int max)
+        private static void Initial_Bar()
         {
-            int[,] RGB_CDF = new int[3,256];
-            for (int Index_Color = 0; Index_Color < 3; Index_Color++)
+            //paint X bar
+            for (int Index_X = 0; Index_X < 256; Index_X++)
             {
-                RGB_CDF[Index_Color, 0] = Piexl_Times[Index_Color, 0];
-                for (int Index_Pixel = 1; Index_Pixel < 256; Index_Pixel++)
-                    RGB_CDF[Index_Color, Index_Pixel] = Piexl_Times[Index_Color, Index_Pixel] + RGB_CDF[Index_Color, Index_Pixel - 1];
+                Image_Pixel[Paint_Start_y, Paint_Start_x + Index_X, 0] = 0;
+                Image_Pixel[Paint_Start_y, Paint_Start_x + Index_X, 1] = 0;
+                Image_Pixel[Paint_Start_y, Paint_Start_x + Index_X, 2] = 0;
+            }
+            //paint Y bar
+            for (int Index_Y = 0; Index_Y < 250; Index_Y++)
+            {
+                Image_Pixel[Paint_Start_x + Index_Y, Paint_Start_x, 0] = 0;
+                Image_Pixel[Paint_Start_x + Index_Y, Paint_Start_x, 1] = 0;
+                Image_Pixel[Paint_Start_x + Index_Y, Paint_Start_x, 2] = 0;
+            }
+        }
+        private static void Paint_Color_Number(int[,,] Target, int[,] Pixel_Times,int Index)
+        {
+            for(int Index_Pixel = 0;Index_Pixel < 256; Index_Pixel++)
+            {
+                int One_Piexl_Height = Convert.ToInt32(Math.Round((Convert.ToDouble(Pixel_Times[Index, Index_Pixel]) * 255 / Convert.ToDouble(Max_RGB[Index])), MidpointRounding.AwayFromZero) );
+                for (int Index_OnePixel = 0; Index_OnePixel < One_Piexl_Height; Index_OnePixel++)
+                {
+                    Target[Paint_Start_y - 1 - Index_OnePixel, Paint_Start_x + Index_Pixel + 1, 0] = 0;
+                    Target[Paint_Start_y - 1 - Index_OnePixel, Paint_Start_x + Index_Pixel + 1, 1] = 0;
+                    Target[Paint_Start_y - 1 - Index_OnePixel, Paint_Start_x + Index_Pixel + 1, 2] = 0;
+
+                    Target[Paint_Start_y - 1 - Index_OnePixel, Paint_Start_x + Index_Pixel + 1, Index] = Index_Pixel;
+                }
+                    
             }
                 
-            //Count correspond number.
-            List<Dictionary<int, int>> Temp_Equalized = new List<Dictionary<int, int>>();
-            for (int Index_Color = 0; Index_Color < 3; Index_Color++)
-            {
-                Dictionary<int, int> OneColor_Equalized = new Dictionary<int, int>();
-                double Rnage = RGB_CDF[Index_Color,255] - Piexl_Times[Index_Color, 0];
-                for(int Index_Piexl = 0; Index_Piexl < 256; Index_Piexl++)
-                {
-                    int Nes_Piexl = Convert.ToInt32( Math.Round(Convert.ToDouble(RGB_CDF[Index_Color, Index_Piexl]- RGB_CDF[Index_Color, 0])*(max-min)/ Rnage, MidpointRounding.AwayFromZero))+min;
-                    OneColor_Equalized.Add(Index_Piexl, Nes_Piexl);
-                }
-                Temp_Equalized.Add(OneColor_Equalized);
-            }
-            return Temp_Equalized;
-        }
-         
-        //Recolor
-        private static void Recolor(List<Dictionary<int, int>> Correspond)
-        {
-            for (int Index_Color = 0; Index_Color < 3; Index_Color++)
-                for (int Index_Hieght = 0; Index_Hieght < Image_Height; Index_Hieght++)
-                    for (int Index_Width = 0; Index_Width < Image_Width; Index_Width++)
-                        Image_Pixel[Index_Hieght, Index_Width, Index_Color] = Correspond[Index_Color][Image_Pixel[Index_Hieght, Index_Width, Index_Color]];
         }
     }
 }

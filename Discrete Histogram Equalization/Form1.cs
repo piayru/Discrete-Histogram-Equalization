@@ -41,6 +41,12 @@ namespace Discrete_Histogram_Equalization
             if(openFileDialog1.ShowDialog()== DialogResult.OK)
             {
                 Histogram_Equalization.Handle(openFileDialog1.FileName,Source, Answer,min,max);
+                PaintHistogram.Paint_Source(openFileDialog1.FileName,Source_R,0);
+                PaintHistogram.Paint_Source(openFileDialog1.FileName, Source_G,1);
+                PaintHistogram.Paint_Source(openFileDialog1.FileName, Source_B,2);
+                PaintHistogram.Paint_Answer(openFileDialog1.FileName, Answer_R, Answer, 0);
+                PaintHistogram.Paint_Answer(openFileDialog1.FileName, Answer_G, Answer, 1);
+                PaintHistogram.Paint_Answer(openFileDialog1.FileName, Answer_B, Answer, 2);
             }
             
         }
